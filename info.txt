@@ -17,7 +17,12 @@ $ docker-compose down
 
 $ docker-compose up -d
 
-(http://localhost:8081/)
+# Mongo Express:
+http://localhost:8081/
+
+
+
+
 
 # Mongo Shell
 $ docker ps
@@ -25,6 +30,21 @@ $ docker exec -it {mongo container id} bash
 root@5aac69feef04:/# mongo mongodb://localhost:27017 -u rootuser -p rootpass
 (ctrl+l => clear the screen)
 > show dbs;
+
+# data types
+# bson
+
+{
+	string: "String of text",
+	int: 405,
+	double: 3.565,
+	boolean: true,
+	array: [1,2,3],
+	object: { attr1: "attr1", attr2: "attr2" },
+	date: new Date("<YYYY-mm-dd>"),
+	object_id: <ObjectId>,
+	no_value: null
+}
 
 # create a db
 > use amigoscode;
@@ -44,16 +64,17 @@ root@5aac69feef04:/# mongo mongodb://localhost:27017 -u rootuser -p rootpass
 
 # another way of creating collection
 > student = {
-... "firstName": "John",
-...     "lastName": "Doe",
-...     "email": "john@sql.com",
-...     "gender": "M",
-...     "country": "UK",
-...     "isStudentActive": false,
-...     "favouriteSubjects": ["maths", "english", "it"],
-...     "totalSpentInBooks": 0.00
-... }
+    "firstName": "John",
+        "lastName": "Doe",
+        "email": "john@sql.com",
+        "gender": "M",
+        "country": "UK",
+        "isStudentActive": false,
+        "favouriteSubjects": ["maths", "english", "it"],
+        "totalSpentInBooks": 0.00
+    }
 > db.student.insert(student);
+> db.student.insertOne(student);
 
 > db.student.count();
 > db.student.find().pretty();
@@ -62,8 +83,40 @@ root@5aac69feef04:/# mongo mongodb://localhost:27017 -u rootuser -p rootpass
 > db.student.insertMany(students);
 
 # querying
+> db.student.find({}).pretty();
+> db.student.find({}, {_id: 0}).pretty(); # do not show id
+> db.student.find({}).limit(3).pretty();
+> db.student.find({}).limit(10).sort({name:1}).pretty();
 > db.student.find({ firstName: 'Lon'  }).pretty();
-> db.student.find( { firstName: 'Lon' }, { firstName: 1, lastName: 1 } ).pretty();
+# or
+> db.student.find({ $or: [{firstName: 'Lon'}, {favouriteSubjects: 'Romance'}]  }).pretty();
+
+# where array size is ...
+> db.student.find({ favouriteSubjects: { $size: 3 }})
+> db.student.find({ favouriteSubjects: { $not: { $size: 3 } }})
+
+# where first item in array is ...
+> db.student.find({ "favouriteSubjects.0": "Horror"})
+
+# get if array contains elements gte 80
+> db.student.find({ grades: {$elemMatch: {$gte: 80 } } })
+
+# gte lte
+> db.student.find( { totalSpentInBooks: { $gte: 35 } } ).count()
+> db.student.find( {favouriteSubjects : {$exists:true}, $where:'this.favouriteSubjects.length>=3'} )
+
+# in
+> db.student.find({ firstName: { $in: ['Lon', 'Gabriell', 'Eddie'] }})
+
+# exists - if a field exists
+> db.student.find( { asdf: { $exists: true } } ).count()
+
+# check type (here, 2 stands for string)
+> db.student.find( { firstName: { $type: 2 } } ).count()
+
+# get only firstName and lastName
+> db.student.find( { firstName: 'Lon' }, { firstName: 1, lastName: 1 } ).pretty(); 
+# exclude firstName and lastName
 > db.student.find( { firstName: 'Lon' }, { firstName: 0, lastName: 0 } ).pretty();
 
 # update
@@ -89,7 +142,30 @@ root@5aac69feef04:/# mongo mongodb://localhost:27017 -u rootuser -p rootpass
 > db.student.find({}, { totalSpentInBooks: 1 }).limit(5).pretty();
 
 
+# see all containers:
+# docker container ls
+# or:
+# docker ps -a
 
+# stopping a container:
+# docker stop {CONTAINER ID}
+
+# see all images
+# docker image ls
+
+# remove containers:
+# docker container prune
+
+# remove images:
+# docker image prune
+
+# remove volumes:
+# docker volume prune
+
+# find out what is using port 80
+# sudo netstat -tulpn | grep :80
+# or:
+# sudo fuser 80/tcp
 
 
 
