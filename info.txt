@@ -58,6 +58,18 @@ root@5aac69feef04:/# mongo mongodb://localhost:27017 -u rootuser -p rootpass
 > db.createCollection("person");
 > show collections
 > db.person.stats();
+
+
+# get a collection schema info:
+> var schemaObj = db.users.findOne();
+> function printSchema(obj, indent) {
+        for (var key in obj) {
+            print(indent, key, typeof obj[key]) ;
+        }
+    };
+> printSchema(schemaObj,"");
+
+
 > db.person.drop();
 
 > db.createCollection("person", { capped: true, size: 6142800, max: 3000 });
